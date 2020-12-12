@@ -119,7 +119,9 @@ namespace Mapsui.UI
                     {
                         if (!(localStyle is LabelStyle)) // I don't intend to support label click, so don't warn
                         {
-                            Logger.Log(LogLevel.Warning, $"Feature info not supported for points with {localStyle.GetType()}");
+                            Logger.Log(LogLevel.Warning, localStyle != null
+                                ? $"Feature info not supported for points with {localStyle.GetType()}"
+                                : $"Feature info with null style {feature.GetType()}");
                         }
                     }
                 }
