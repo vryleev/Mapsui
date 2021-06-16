@@ -16,9 +16,9 @@ namespace Mapsui.UI
 
         void RefreshGraphics();
 
-        void RefreshData();
+        void RefreshData(ChangeType changeType = ChangeType.Discrete);
 
-        void Refresh();
+        void Refresh(ChangeType changeType = ChangeType.Discrete);
 
         double UnSnapRotationDegrees { get; set; }
 
@@ -26,14 +26,14 @@ namespace Mapsui.UI
 
         void Unsubscribe();
 
+        IRenderer Renderer { get; }
+
+        void OpenBrowser(string url); //todo: Perhaps remove
+
         /// <summary>
         /// The number of pixel per device independent unit
         /// </summary>
         float PixelDensity { get; }
-
-        IRenderer Renderer { get; }
-
-        void OpenBrowser(string url); //todo: Perhaps remove
 
         /// <summary>
         /// Converts coordinates in pixels to device independent units (or DIP or DP).

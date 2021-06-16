@@ -121,18 +121,19 @@ namespace Mapsui.Layers
             // not implemented for ImageLayer
         }
 
-        public override void RefreshData(BoundingBox extent, double resolution, bool majorChange, bool anywayUpdate = false)
+        public override void RefreshData(BoundingBox extent, double resolution, ChangeType changeType)
         {
             if (!Enabled) return;
             if (DataSource == null) return;
-            if (!majorChange) return;
+            // Fetching an image, that often covers the whole map, is expensive. Only do it on Discrete changes.
+            if (changeType == ChangeType.Continuous) return;
 
             _newExtent = extent;
             _newResolution = resolution;
 
             if (_isFetching)
             {
-                _needsUpdate = true;
+                _needsUpdate = true;    
                 return;
             }
 
@@ -156,9 +157,16 @@ namespace Mapsui.Layers
 
             Task.Run(() =>
             {
-                Logger.Log(LogLevel.Debug, $"Start image fetch at {DateTime.Now.TimeOfDay}");
-                fetcher.FetchOnThread();
-                Logger.Log(LogLevel.Debug, $"Finished image fetch at {DateTime.Now.TimeOfDay}");
+                try 
+                { 
+                    Logger.Log(LogLevel.Debug, $"Start image fetch at {DateTime.Now.TimeOfDay}");
+                    fetcher.FetchOnThread();
+                    Logger.Log(LogLevel.Debug, $"Finished image fetch at {DateTime.Now.TimeOfDay}");
+                }
+                catch (Exception ex)
+                {
+                    OnDataChanged(new DataChangedEventArgs(ex, false, null));
+                }
             });
         }
 

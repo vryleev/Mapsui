@@ -5,79 +5,38 @@
   <Import Project="..\..\packages\Microsoft.CodeCoverage.16.4.0\build\netstandard1.0\Microsoft.CodeCoverage.props" Condition="Exists('..\..\packages\Microsoft.CodeCoverage.16.4.0\build\netstandard1.0\Microsoft.CodeCoverage.props')" />
   <Import Project="..\..\packages\NUnit.3.11.0\build\NUnit.props" Condition="Exists('..\..\packages\NUnit.3.11.0\build\NUnit.props')" />
   <Import Project="$(MSBuildExtensionsPath)\$(MSBuildToolsVersion)\Microsoft.Common.props" Condition="Exists('$(MSBuildExtensionsPath)\$(MSBuildToolsVersion)\Microsoft.Common.props')" />
+﻿<Project Sdk="Microsoft.NET.Sdk">
   <PropertyGroup>
-    <Configuration Condition=" '$(Configuration)' == '' ">Debug</Configuration>
-    <Platform Condition=" '$(Platform)' == '' ">AnyCPU</Platform>
-    <ProjectGuid>{53A4E033-F814-46CC-8105-DAC289524455}</ProjectGuid>
+    <TargetFramework>net48</TargetFramework>
     <OutputType>Exe</OutputType>
-    <AppDesignerFolder>Properties</AppDesignerFolder>
-    <RootNamespace>Mapsui.Rendering.Skia.Tests</RootNamespace>
-    <AssemblyName>Mapsui.Rendering.Skia.Tests</AssemblyName>
-    <TargetFrameworkVersion>v4.6.1</TargetFrameworkVersion>
-    <FileAlignment>512</FileAlignment>
-    <AutoGenerateBindingRedirects>true</AutoGenerateBindingRedirects>
-    <NuGetPackageImportStamp>
-    </NuGetPackageImportStamp>
-    <TargetFrameworkProfile />
+    <GenerateAssemblyInfo>false</GenerateAssemblyInfo>
+    <Platforms>AnyCPU;x64;x86</Platforms>
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|AnyCPU' ">
-    <PlatformTarget>AnyCPU</PlatformTarget>
-    <DebugSymbols>true</DebugSymbols>
-    <DebugType>full</DebugType>
-    <Optimize>false</Optimize>
-    <OutputPath>bin\Debug\</OutputPath>
     <DefineConstants>TRACE;DEBUG;SKIA</DefineConstants>
-    <ErrorReport>prompt</ErrorReport>
-    <WarningLevel>4</WarningLevel>
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Release|AnyCPU' ">
-    <PlatformTarget>AnyCPU</PlatformTarget>
-    <DebugType>pdbonly</DebugType>
-    <Optimize>true</Optimize>
-    <OutputPath>bin\Release\</OutputPath>
     <DefineConstants>TRACE;SKIA</DefineConstants>
-    <ErrorReport>prompt</ErrorReport>
-    <WarningLevel>4</WarningLevel>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)' == 'Debug|x64'">
-    <DebugSymbols>true</DebugSymbols>
     <OutputPath>bin\x64\Debug\</OutputPath>
     <DefineConstants>TRACE;DEBUG;SKIA</DefineConstants>
-    <DebugType>full</DebugType>
-    <PlatformTarget>x64</PlatformTarget>
-    <ErrorReport>prompt</ErrorReport>
     <CodeAnalysisRuleSet>MinimumRecommendedRules.ruleset</CodeAnalysisRuleSet>
-    <Prefer32Bit>true</Prefer32Bit>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)' == 'Release|x64'">
     <OutputPath>bin\x64\Release\</OutputPath>
     <DefineConstants>TRACE;SKIA</DefineConstants>
-    <Optimize>true</Optimize>
-    <DebugType>pdbonly</DebugType>
-    <PlatformTarget>x64</PlatformTarget>
-    <ErrorReport>prompt</ErrorReport>
     <CodeAnalysisRuleSet>MinimumRecommendedRules.ruleset</CodeAnalysisRuleSet>
-    <Prefer32Bit>true</Prefer32Bit>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)' == 'Debug|x86'">
-    <DebugSymbols>true</DebugSymbols>
     <OutputPath>bin\x86\Debug\</OutputPath>
     <DefineConstants>TRACE;DEBUG;SKIA</DefineConstants>
-    <DebugType>full</DebugType>
-    <PlatformTarget>x86</PlatformTarget>
-    <ErrorReport>prompt</ErrorReport>
     <CodeAnalysisRuleSet>MinimumRecommendedRules.ruleset</CodeAnalysisRuleSet>
-    <Prefer32Bit>true</Prefer32Bit>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)' == 'Release|x86'">
     <OutputPath>bin\x86\Release\</OutputPath>
     <DefineConstants>TRACE;SKIA</DefineConstants>
-    <Optimize>true</Optimize>
-    <DebugType>pdbonly</DebugType>
-    <PlatformTarget>x86</PlatformTarget>
-    <ErrorReport>prompt</ErrorReport>
     <CodeAnalysisRuleSet>MinimumRecommendedRules.ruleset</CodeAnalysisRuleSet>
-    <Prefer32Bit>true</Prefer32Bit>
     <TreatWarningsAsErrors>true</TreatWarningsAsErrors>
   </PropertyGroup>
   <ItemGroup>
@@ -212,20 +171,12 @@
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="..\..\Mapsui.Geometries\Mapsui.Geometries.csproj">
-      <Project>{ee55b62d-ffa2-4c24-a4ad-7a47ace55ce5}</Project>
-      <Name>Mapsui.Geometries</Name>
     </ProjectReference>
     <ProjectReference Include="..\..\Mapsui.Rendering.Skia\Mapsui.Rendering.Skia.csproj">
-      <Project>{DEA6E9AE-2B6A-4E83-83B7-E9DF0E492301}</Project>
-      <Name>Mapsui.Rendering.Skia</Name>
     </ProjectReference>
     <ProjectReference Include="..\..\Mapsui\Mapsui.csproj">
-      <Project>{d74c052a-c07e-4b37-a898-134218aca5c9}</Project>
-      <Name>Mapsui</Name>
     </ProjectReference>
     <ProjectReference Include="..\Mapsui.Tests.Common\Mapsui.Tests.Common.csproj">
-      <Project>{81bb36d2-4d01-44e3-9024-e7cbd10da316}</Project>
-      <Name>Mapsui.Tests.Common</Name>
     </ProjectReference>
   </ItemGroup>
   <ItemGroup>
@@ -239,6 +190,9 @@
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
     </Content>
     <Content Include="Resources\Images\Original\line.png">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </Content>
+    <Content Include="Resources\Images\Original\points_with_svgsymbolstyle.png">
       <CopyToOutputDirectory>Always</CopyToOutputDirectory>
     </Content>
     <Content Include="Resources\Images\Original\points_with_symbolstyle.png">
@@ -288,4 +242,111 @@
   <Target Name="AfterBuild">
   </Target>
   -->
+  <ItemGroup>
+    <PackageReference Include="BruTile" Version="3.1.3">
+    </PackageReference>
+    <PackageReference Include="Microsoft.CodeCoverage" Version="16.5.0">
+    </PackageReference>
+    <PackageReference Include="Microsoft.CSharp" Version="4.7.0" />
+    <PackageReference Include="Microsoft.NETCore.Platforms" Version="3.1.0">
+    </PackageReference>
+    <PackageReference Include="Microsoft.Win32.Primitives" Version="4.3.0">
+    </PackageReference>
+    <PackageReference Include="NETStandard.Library" Version="2.0.3">
+    </PackageReference>
+    <PackageReference Include="NUnit" Version="3.12.0">
+    </PackageReference>
+    <PackageReference Include="NUnit3TestAdapter" Version="3.16.1">
+      <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
+      <PrivateAssets>all</PrivateAssets>
+    </PackageReference>
+    <PackageReference Include="OpenTK.GLControl" Version="3.1.0">
+    </PackageReference>
+    <PackageReference Include="SkiaSharp.Views" Version="2.80.2">
+    </PackageReference>
+    <PackageReference Include="Svg.Skia" Version="0.5.0">
+    </PackageReference>
+    <PackageReference Include="System.AppContext" Version="4.3.0">
+    </PackageReference>
+    <PackageReference Include="System.Collections" Version="4.3.0">
+    </PackageReference>
+    <PackageReference Include="System.ComponentModel.Composition" Version="5.0.0" />
+    <PackageReference Include="System.Console" Version="4.3.1">
+    </PackageReference>
+    <PackageReference Include="System.Data.DataSetExtensions" Version="4.5.0" />
+    <PackageReference Include="System.Diagnostics.Debug" Version="4.3.0">
+    </PackageReference>
+    <PackageReference Include="System.Diagnostics.DiagnosticSource" Version="4.7.0">
+    </PackageReference>
+    <PackageReference Include="System.Diagnostics.Tools" Version="4.3.0">
+    </PackageReference>
+    <PackageReference Include="System.Diagnostics.Tracing" Version="4.3.0">
+    </PackageReference>
+    <PackageReference Include="System.Globalization" Version="4.3.0">
+    </PackageReference>
+    <PackageReference Include="System.Globalization.Calendars" Version="4.3.0">
+    </PackageReference>
+    <PackageReference Include="System.IO.Compression" Version="4.3.0">
+    </PackageReference>
+    <PackageReference Include="System.IO.Compression.ZipFile" Version="4.3.0">
+    </PackageReference>
+    <PackageReference Include="System.IO.FileSystem" Version="4.3.0">
+    </PackageReference>
+    <PackageReference Include="System.Linq" Version="4.3.0">
+    </PackageReference>
+    <PackageReference Include="System.Linq.Expressions" Version="4.3.0">
+    </PackageReference>
+    <PackageReference Include="System.Memory" Version="4.5.4">
+    </PackageReference>
+    <PackageReference Include="System.Net.Http" Version="4.3.4">
+    </PackageReference>
+    <PackageReference Include="System.Net.Primitives" Version="4.3.1">
+    </PackageReference>
+    <PackageReference Include="System.Net.Sockets" Version="4.3.0">
+    </PackageReference>
+    <PackageReference Include="System.ObjectModel" Version="4.3.0">
+    </PackageReference>
+    <PackageReference Include="System.Reflection" Version="4.3.0">
+    </PackageReference>
+    <PackageReference Include="System.Reflection.Extensions" Version="4.3.0">
+    </PackageReference>
+    <PackageReference Include="System.Reflection.Primitives" Version="4.3.0">
+    </PackageReference>
+    <PackageReference Include="System.Resources.ResourceManager" Version="4.3.0">
+    </PackageReference>
+    <PackageReference Include="System.Runtime" Version="4.3.1">
+    </PackageReference>
+    <PackageReference Include="System.Runtime.CompilerServices.Unsafe" Version="4.7.1">
+    </PackageReference>
+    <PackageReference Include="System.Runtime.Extensions" Version="4.3.1">
+    </PackageReference>
+    <PackageReference Include="System.Runtime.Handles" Version="4.3.0">
+    </PackageReference>
+    <PackageReference Include="System.Runtime.InteropServices" Version="4.3.0">
+    </PackageReference>
+    <PackageReference Include="System.Runtime.InteropServices.RuntimeInformation" Version="4.3.0">
+    </PackageReference>
+    <PackageReference Include="System.Runtime.Numerics" Version="4.3.0">
+    </PackageReference>
+    <PackageReference Include="System.Security.Cryptography.Algorithms" Version="4.3.1">
+    </PackageReference>
+    <PackageReference Include="System.Security.Cryptography.X509Certificates" Version="4.3.2">
+    </PackageReference>
+    <PackageReference Include="System.Text.Encoding" Version="4.3.0">
+    </PackageReference>
+    <PackageReference Include="System.Text.Encoding.Extensions" Version="4.3.0">
+    </PackageReference>
+    <PackageReference Include="System.Text.RegularExpressions" Version="4.3.1">
+    </PackageReference>
+    <PackageReference Include="System.Threading" Version="4.3.0">
+    </PackageReference>
+    <PackageReference Include="System.Threading.Tasks" Version="4.3.0">
+    </PackageReference>
+    <PackageReference Include="System.Threading.Timer" Version="4.3.0">
+    </PackageReference>
+    <PackageReference Include="System.Xml.ReaderWriter" Version="4.3.1">
+    </PackageReference>
+    <PackageReference Include="System.Xml.XDocument" Version="4.3.0">
+    </PackageReference>
+  </ItemGroup>
 </Project>

@@ -19,6 +19,8 @@ using Mapsui.Widgets;
 using Mapsui.Widgets.ScaleBar;
 using Mapsui.Widgets.Zoom;
 using XamlMedia = System.Windows.Media;
+using Mapsui.UI;
+using Mapsui.Rendering.Xaml.XamlStyles;
 
 namespace Mapsui.Rendering.Xaml
 {
@@ -27,6 +29,11 @@ namespace Mapsui.Rendering.Xaml
         private readonly SymbolCache _symbolCache = new SymbolCache();
         public ISymbolCache SymbolCache => _symbolCache;
         public IDictionary<Type, IWidgetRenderer> WidgetRenders { get; } = new Dictionary<Type, IWidgetRenderer>();
+
+        /// <summary>
+        /// Dictionary holding all special renderers for styles
+        /// </summary>
+        public IDictionary<Type, IStyleRenderer> StyleRenderers { get; } = new Dictionary<Type, IStyleRenderer>();
 
         static MapRenderer()
         {
@@ -105,15 +112,16 @@ namespace Mapsui.Rendering.Xaml
             return background == null ? null : new XamlMedia.SolidColorBrush {Color = background.ToXaml()};
         }
 
-        public MemoryStream RenderToBitmapStream(IReadOnlyViewport viewport, IEnumerable<ILayer> layers, Color background = null)
+        public MemoryStream RenderToBitmapStream(IReadOnlyViewport viewport, IEnumerable<ILayer> layers, Color background = null, float pixelDensity = 1)
         {
             MemoryStream bitmapStream = null;
             RunMethodOnStaThread(() => bitmapStream = RenderToBitmapStreamStatic(viewport, layers, _symbolCache));
             return bitmapStream;
         }
         
-        private static MemoryStream RenderToBitmapStreamStatic(IReadOnlyViewport viewport, IEnumerable<ILayer> layers, SymbolCache symbolCache)
+        private static MemoryStream RenderToBitmapStreamStatic(IReadOnlyViewport viewport, IEnumerable<ILayer> layers, SymbolCache symbolCache, float pixelDensity = 1)
         {
+            // todo: Use pixelDensity. This has no priority because even on desktop skia could be use instead.
             var canvas = new Canvas();
             Render(canvas, viewport, layers, symbolCache, true);
             var bitmapStream = BitmapRendering.BitmapConverter.ToBitmapStream(canvas, (int)viewport.Width, (int)viewport.Height);
@@ -203,6 +211,17 @@ namespace Mapsui.Rendering.Xaml
 
         private static void RenderFeature(IReadOnlyViewport viewport, Canvas canvas, IFeature feature, IStyle style, SymbolCache symbolCache, bool rasterizing)
         {
+            //// Check, if we have a special renderer for this style
+            //if (StyleRenderers.ContainsKey(style.GetType()))
+            //{
+            //    // We have a special renderer, so try, if it could draw this
+            //    var result = ((IXamlStyleRenderer)StyleRenderers[style.GetType()]).Draw(canvas, viewport, layer, feature, style, symbolCache);
+            //    // Was it drawn?
+            //    if (result)
+            //        // Yes, special style renderer drawn correct
+            //        return;
+            //}
+            //// No special style renderer handled this up to now, than try standard renderers
             if (style is LabelStyle)
             {
                 var labelStyle = (LabelStyle) style;
@@ -267,6 +286,17 @@ namespace Mapsui.Rendering.Xaml
                 GeometryRenderer.PositionGeometry(renderedGeometry, viewport);
             else if (feature.Geometry is IRaster)
                 GeometryRenderer.PositionRaster(renderedGeometry, feature.Geometry.BoundingBox, viewport);
+        }
+
+        public MapInfo GetMapInfo(Geometries.Point screenPosition, IReadOnlyViewport viewport, IEnumerable<ILayer> layers, int margin = 0)
+        {
+            layers = layers.Where(l => l.IsMapInfoLayer);
+            return MapInfoHelper.GetMapInfo(layers, viewport, screenPosition, _symbolCache, margin);
+        }
+
+        public MapInfo GetMapInfo(double x, double y, IReadOnlyViewport viewport, IEnumerable<ILayer> layers, int margin = 0)
+        {
+            return GetMapInfo(new Geometries.Point(x, y), viewport, layers);
         }
     }
 }

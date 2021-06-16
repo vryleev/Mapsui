@@ -23,7 +23,6 @@ namespace Mapsui.Layers
         private double _opacity;
         private IStyle _style;
         private object _tag;
-        private bool _isActive;
         private ITransformation _transformation;
         private BoundingBox _envelope;
 
@@ -53,7 +52,6 @@ namespace Mapsui.Layers
             MaxVisible = double.MaxValue;
             Opacity = 1;
             Id = _instanceCounter++;
-            IsActive = true;
         }
 
         /// <summary>
@@ -80,13 +78,13 @@ namespace Mapsui.Layers
         public int Id { get; }
 
         /// <inheritdoc />
-        public object Tag
-        {
+        public object Tag 
+        { 
             get => _tag;
             set
-            {
-                _tag = value;
-                OnPropertyChanged(nameof(Tag));
+            { 
+                _tag = value; 
+                OnPropertyChanged(nameof(Tag)); 
             }
         }
 
@@ -204,7 +202,7 @@ namespace Mapsui.Layers
             }
         }
 
-
+       
         /// <summary>
         /// Returns the envelope of all avaiable data in the layer
         /// </summary>
@@ -232,7 +230,7 @@ namespace Mapsui.Layers
 
         /// <inheritdoc />
 
-        public abstract void RefreshData(BoundingBox extent, double resolution, bool majorChange, bool anywayUpdate = false);
+        public abstract void RefreshData(BoundingBox extent, double resolution, ChangeType changeType);
 
         public void DataHasChanged()
         {
@@ -258,17 +256,6 @@ namespace Mapsui.Layers
         protected void OnDataChanged(DataChangedEventArgs args)
         {
             DataChanged?.Invoke(this, args);
-        }
-
-        public bool IsActive
-        {
-            get => _isActive;
-            set
-            {
-                if (_isActive == value) return;
-                _isActive = value;
-                OnPropertyChanged(nameof(IsActive));
-            }
         }
     }
 }

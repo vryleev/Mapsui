@@ -6,20 +6,18 @@ using Mapsui.Geometries;
 using Mapsui.Logging;
 using Mapsui.Providers;
 using Mapsui.Rendering;
-using System.Threading;
 
 namespace Mapsui.Layers
 {
     public class RasterizingLayer : BaseLayer, IAsyncDataFetcher
     {
         private readonly MemoryProvider _cache;
-        private readonly int _delayBeforeRasterize;
         private readonly ILayer _layer;
         private readonly bool _onlyRerasterizeIfOutsideOverscan;
         private readonly double _overscan;
         private readonly double _renderResolutionMultiplier;
+        private readonly float _pixelDensity;
         private readonly object _syncLock = new object();
-        private readonly Timer _timer;
         private bool _busy;
         private Viewport _currentViewport;
         private BoundingBox _extent;
@@ -27,6 +25,8 @@ namespace Mapsui.Layers
         private IEnumerable<IFeature> _previousFeatures;
         private IRenderer _rasterizer;
         private double _resolution;
+        public Delayer Delayer { get; } = new Delayer();
+        private Delayer _rasterizeDelayer = new Delayer();
 
         /// <summary>
         ///     Creates a RasterizingLayer which rasterizes a layer for performance
@@ -37,53 +37,52 @@ namespace Mapsui.Layers
         /// <param name="rasterizer">Rasterizer to use. null will use the default</param>
         /// <param name="overscanRatio">The ratio of the size of the rasterized output to the current viewport</param>
         /// <param name="onlyRerasterizeIfOutsideOverscan">
-        ///     Set the rerasterization policy. false will trigger a Rerasterisation on
-        ///     every viewport change. true will trigger a Rerasterisation only if the viewport moves outside the existing
-        ///     rasterisation.
+        ///     Set the rasterization policy. false will trigger a Rasterization on
+        ///     every viewport change. true will trigger a Rerasterization only if the viewport moves outside the existing
+        ///     rasterization.
         /// </param>
         public RasterizingLayer(
-            ILayer layer, 
-            int delayBeforeRasterize = 500, 
+            ILayer layer,
+            int delayBeforeRasterize = 1000,
             double renderResolutionMultiplier = 1,
-            IRenderer rasterizer = null, 
-            double overscanRatio = 1, 
-            bool onlyRerasterizeIfOutsideOverscan = false)
+            IRenderer rasterizer = null,
+            double overscanRatio = 1,
+            bool onlyRerasterizeIfOutsideOverscan = false,
+            float pixelDensity = 1)
         {
             if (overscanRatio < 1)
                 throw new ArgumentException($"{nameof(overscanRatio)} must be >= 1", nameof(overscanRatio));
 
             _layer = layer;
             Name = layer.Name;
-            _delayBeforeRasterize = delayBeforeRasterize;
             _renderResolutionMultiplier = renderResolutionMultiplier;
             _rasterizer = rasterizer;
             _cache = new MemoryProvider();
             _overscan = overscanRatio;
             _onlyRerasterizeIfOutsideOverscan = onlyRerasterizeIfOutsideOverscan;
+            _pixelDensity = pixelDensity;
             _layer.DataChanged += LayerOnDataChanged;
-            _timer = new Timer(TimerElapsed, null, _delayBeforeRasterize, Timeout.Infinite);
+            Delayer.StartWithDelay = true;
+            Delayer.MillisecondsToWait = delayBeforeRasterize;
         }
 
         public override BoundingBox Envelope => _layer.Envelope;
 
-        private void TimerElapsed(object state)
-        {
-            _timer.Change(Timeout.Infinite, Timeout.Infinite);
-            Rasterize();
-        }
+        public ILayer ChildLayer => _layer;
 
         private void LayerOnDataChanged(object sender, DataChangedEventArgs dataChangedEventArgs)
         {
-            _modified = true;
+            if (!Enabled) return;
+            if (MinVisible > _resolution) return;
+            if (MaxVisible < _resolution) return;
             if (_busy) return;
-            RestartTimer();
+
+            _modified = true;
+
+            // Will start immediately if it is not currently waiting. This well be in most cases.
+            _rasterizeDelayer.ExecuteDelayed(Rasterize);
         }
 
-        private void RestartTimer()
-        {
-            _timer.Change(_delayBeforeRasterize, Timeout.Infinite);
-        }
-        
         private void Rasterize()
         {
             if (!Enabled) return;
@@ -103,7 +102,7 @@ namespace Mapsui.Layers
 
                     _rasterizer = _rasterizer ?? DefaultRendererFactory.Create();
 
-                    var bitmapStream = _rasterizer.RenderToBitmapStream(viewport, new[] { _layer });
+                    var bitmapStream = _rasterizer.RenderToBitmapStream(viewport, new[] { _layer }, pixelDensity: _pixelDensity);
                     RemoveExistingFeatures();
 
                     if (bitmapStream != null)
@@ -120,7 +119,7 @@ namespace Mapsui.Layers
                         OnDataChanged(new DataChangedEventArgs());
                     }
 
-                    if (_modified) RestartTimer();
+                    if (_modified) Delayer.ExecuteDelayed(() => _layer.RefreshData(_extent.Copy(), _resolution, ChangeType.Discrete));
                 }
                 finally
                 {
@@ -164,9 +163,13 @@ namespace Mapsui.Layers
             if (_layer is IAsyncDataFetcher asyncLayer) asyncLayer.AbortFetch();
         }
 
-        public override void RefreshData(BoundingBox extent, double resolution, bool majorChange, bool anywayUpdate = false)
+        public override void RefreshData(BoundingBox extent, double resolution, ChangeType changeType)
         {
             var newViewport = CreateViewport(extent, resolution, _renderResolutionMultiplier, 1);
+
+            if (!Enabled) return;
+            if (MinVisible > resolution) return;
+            if (MaxVisible < resolution) return;
 
             if (!_onlyRerasterizeIfOutsideOverscan ||
                 (_currentViewport == null) ||
@@ -176,8 +179,10 @@ namespace Mapsui.Layers
             {
                 _extent = extent;
                 _resolution = resolution;
-                _layer.RefreshData(extent, resolution, majorChange);
-                RestartTimer();
+                if (_layer is IAsyncDataFetcher)
+                    Delayer.ExecuteDelayed(() => _layer.RefreshData(extent.Copy(), resolution, changeType));
+                else
+                    Delayer.ExecuteDelayed(Rasterize);
             }
         }
 
@@ -189,13 +194,13 @@ namespace Mapsui.Layers
         private static Viewport CreateViewport(BoundingBox extent, double resolution, double renderResolutionMultiplier,
             double overscan)
         {
-            var renderResolution = resolution/renderResolutionMultiplier;
+            var renderResolution = resolution / renderResolutionMultiplier;
             return new Viewport
             {
                 Resolution = renderResolution,
                 Center = extent.Centroid,
-                Width = extent.Width*overscan/renderResolution,
-                Height = extent.Height*overscan/renderResolution
+                Width = extent.Width * overscan / renderResolution,
+                Height = extent.Height * overscan / renderResolution
             };
         }
     }
