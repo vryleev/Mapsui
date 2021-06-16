@@ -8,7 +8,9 @@ namespace Mapsui.Styles
     {
         Ellipse,
         Rectangle,
-        Triangle
+        Triangle,
+        Bitmap,
+        Svg
     }
 
     public class SymbolStyle : ImageStyle // todo: derive SymbolStyle from VectorStyle after v2.
