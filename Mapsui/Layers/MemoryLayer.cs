@@ -32,7 +32,7 @@ namespace Mapsui.Layers
             return DataSource.GetFeaturesInView(biggerBox, resolution);
         }
 
-        public override void RefreshData(BoundingBox extent, double resolution, ChangeType changeType)
+        public override void RefreshData(BoundingBox extent, double resolution, ChangeType changeType, bool anywayUpdate = false)
         {
             // RefreshData needs no implementation for the MemoryLayer. Calling OnDataChanged here
             // would trigger an extra needless render iteration.

@@ -76,12 +76,6 @@ namespace Mapsui.UI.Forms
                 case nameof(StrokeWidth):
                     ((VectorStyle)Feature.Styles.First()).Outline.Width = StrokeWidth;
                     break;
-                case nameof(StrokeColor):
-                    ((VectorStyle)Feature.Styles.First()).Outline.Color = StrokeColor.ToMapsui();
-                    break;
-                case nameof(StrokeWidth):
-                    ((VectorStyle)Feature.Styles.First()).Outline.Width = StrokeWidth;
-                    break;
             }
         }
 

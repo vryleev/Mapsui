@@ -22,6 +22,8 @@ namespace Mapsui.Utilities
 {
     public static class ZoomHelper
     {
+        private const double _minResolution = 0.005;
+
         public static double ZoomIn(IReadOnlyList<double> resolutions, double resolution)
         {
             if (resolutions == null || resolutions.Count == 0) return resolution / 2.0;
@@ -32,13 +34,22 @@ namespace Mapsui.Utilities
                 if (resolutions[i] < (resolution - double.Epsilon)) return resolutions[i];
             }
 
-            // Else return half of the current resolution
-            return resolution / 2.0;
+            if (resolution > _minResolution)
+            {
+                return resolution / 2.0;
+            }
+
+            return resolution;
         }
         
         public static double ZoomOut(IReadOnlyList<double> resolutions, double resolution)
         {
             if (resolutions == null || resolutions.Count == 0) return resolution * 2.0;
+
+            if (resolution < resolutions[resolutions.Count - 1])
+            {
+                return resolution * 2.0;
+            }
 
             for (var i = resolutions.Count - 1; i >= 0; i--)
             {

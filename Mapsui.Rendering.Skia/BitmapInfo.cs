@@ -1,6 +1,7 @@
 ﻿using Mapsui.Styles;
 using SkiaSharp;
 using Svg.Skia;
+using SKSvg = Svg.Skia.SKSvg;
 
 namespace Mapsui.Rendering.Skia
 {

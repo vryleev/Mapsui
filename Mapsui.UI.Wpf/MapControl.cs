@@ -59,6 +59,9 @@ namespace Mapsui.UI.Wpf
             MouseLeftButtonDown += MapControlMouseLeftButtonDown;
             MouseLeftButtonUp += MapControlMouseLeftButtonUp;
 
+            MouseDown += MapControl_MouseDown;
+            MouseUp += MapControl_MouseUp;
+
             TouchUp += MapControlTouchUp;
 
             MouseMove += MapControlMouseMove;
@@ -75,6 +78,28 @@ namespace Mapsui.UI.Wpf
             IsManipulationEnabled = true;
 
             RenderMode = RenderMode.Skia;
+        }
+
+        private void MapControl_MouseUp(object sender, MouseButtonEventArgs e)
+        {
+            if (System.Configuration.ConfigurationManager.AppSettings.Get("MapMoveMouseButton") == "Middle")
+            {
+                if (e.ChangedButton == MouseButton.Middle && e.ButtonState == MouseButtonState.Released)
+                {
+                    FixMouseUpPosition(e);
+                }
+            }
+        }
+
+        private void MapControl_MouseDown(object sender, MouseButtonEventArgs e)
+        {
+            if (System.Configuration.ConfigurationManager.AppSettings.Get("MapMoveMouseButton") == "Middle")
+            {
+                if (e.ChangedButton == MouseButton.Middle && e.ButtonState == MouseButtonState.Pressed)
+                {
+                    FixMouseDownPosition(e);
+                }
+            }
         }
 
         protected override void OnRender(DrawingContext dc)
@@ -207,6 +232,14 @@ namespace Mapsui.UI.Wpf
 
         private void MapControlMouseLeftButtonDown(object sender, MouseButtonEventArgs e)
         {
+            if (System.Configuration.ConfigurationManager.AppSettings.Get("MapMoveMouseButton") != "Middle")
+            {
+                FixMouseDownPosition(e);
+            }
+        }
+
+        private void FixMouseDownPosition(MouseButtonEventArgs e)
+        {
             // We have a new interaction with the screen, so stop all navigator animations
             Navigator.StopRunningAnimation();
 
@@ -234,6 +267,14 @@ namespace Mapsui.UI.Wpf
         }
 
         private void MapControlMouseLeftButtonUp(object sender, MouseButtonEventArgs e)
+        {
+            if (System.Configuration.ConfigurationManager.AppSettings.Get("MapMoveMouseButton") != "Middle")
+            {
+                FixMouseUpPosition(e);
+            }
+        }
+
+        private void FixMouseUpPosition(MouseButtonEventArgs e)
         {
             var mousePosition = e.GetPosition(this).ToMapsui();
 

@@ -4,6 +4,7 @@ using SkiaSharp;
 using SkiaSharp.Views.Forms;
 using Svg.Skia;
 using Xamarin.Forms;
+using SKSvg = Svg.Skia.SKSvg;
 
 namespace Mapsui.UI.Forms
 {

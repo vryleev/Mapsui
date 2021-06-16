@@ -145,7 +145,7 @@ namespace Mapsui.Layers
         /// implementation could ignore it. Example: During dragging a map a WMS layer would not want
         /// to fetch data, only on the drag end.
         /// </param>
-        void RefreshData(BoundingBox extent, double resolution, ChangeType changeType);
+        void RefreshData(BoundingBox extent, double resolution, ChangeType changeType, bool anywayUpdate = false);
 
         /// <summary>
         /// To indicate the data withing the layer has changed. This triggers a DataChanged event.
