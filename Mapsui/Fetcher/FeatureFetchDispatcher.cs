@@ -72,9 +72,12 @@ namespace Mapsui.Fetcher
             {
                 // Fetch a bigger extent to include partially visible symbols. 
                 // todo: Take into account the maximum symbol size of the layer
+                //var grownExtent = extent.Grow(
+                //    SymbolStyle.DefaultWidth * 2 * resolution,
+                //    SymbolStyle.DefaultHeight * 2 * resolution);
                 var grownExtent = extent.Grow(
-                    SymbolStyle.DefaultWidth * 2 * resolution,
-                    SymbolStyle.DefaultHeight * 2 * resolution);
+                    SymbolStyle.DefaultWidth / 4 * resolution,
+                    SymbolStyle.DefaultHeight / 4 * resolution);
                 var transformedExtent = _transformer.TransformBack(grownExtent);
                 _extent = transformedExtent;
                 _resolution = resolution;

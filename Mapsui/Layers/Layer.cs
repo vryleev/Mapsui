@@ -151,8 +151,8 @@ namespace Mapsui.Layers
         public override void RefreshData(BoundingBox extent, double resolution, ChangeType changeType, bool anywayUpdate = false)
         {
             if (!Enabled) return;
-            if (MinVisible > resolution) return;
-            if (MaxVisible < resolution) return;
+            //if (MinVisible > resolution) return;
+            //if (MaxVisible < resolution) return;
             if (DataSource == null) return;
             if (changeType == ChangeType.Continuous) return;
 
