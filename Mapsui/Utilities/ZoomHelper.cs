@@ -22,36 +22,43 @@ namespace Mapsui.Utilities
 {
     public static class ZoomHelper
     {
-        private const double _minResolution = 0.005; 
+        private const double _minResolution = 0.005;
+
         public static double ZoomIn(IReadOnlyList<double> resolutions, double resolution)
         {
             if (resolutions == null || resolutions.Count == 0) return resolution / 2.0;
-                        
-            foreach (var r in resolutions)
-                if (r < resolution) return r;
+
+            for (var i = 0; i < resolutions.Count; i++)
+            {
+                // If there is a smaller resolution in the array return it
+                if (resolutions[i] < (resolution - double.Epsilon)) return resolutions[i];
+            }
+
             if (resolution > _minResolution)
             {
                 return resolution / 2.0;
             }
-            else
-            {
-                return resolution;
-            }
-            
-            //return resolutions[resolutions.Count - 1];
+
+            return resolution;
         }
         
         public static double ZoomOut(IReadOnlyList<double> resolutions, double resolution)
         {
             if (resolutions == null || resolutions.Count == 0) return resolution * 2.0;
 
-            if (resolution < resolutions[resolutions.Count-1])
+            if (resolution < resolutions[resolutions.Count - 1])
             {
                 return resolution * 2.0;
             }
+
             for (var i = resolutions.Count - 1; i >= 0; i--)
-                if (resolutions[i] > resolution) return resolutions[i];
-            return resolutions[0];
+            {
+                // If there is a bigger resolution in the array return it
+                if (resolutions[i] > (resolution + double.Epsilon)) return resolutions[i];
+            }
+
+            // Else return double the current resolution
+            return resolution * 2.0;
         }
 
         [Obsolete("Use ViewportLimiter.LimitExtent instead")]

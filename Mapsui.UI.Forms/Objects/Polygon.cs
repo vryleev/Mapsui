@@ -16,8 +16,8 @@ namespace Mapsui.UI.Forms
     {
         public static readonly BindableProperty FillColorProperty = BindableProperty.Create(nameof(FillColor), typeof(Xamarin.Forms.Color), typeof(Polygon), Xamarin.Forms.Color.DarkGray);
 
-        private readonly ObservableCollection<Position> _positions = new ObservableCollection<Position>();
-        private readonly ObservableCollection<Position[]> _holes = new ObservableCollection<Position[]>();
+        private readonly ObservableRangeCollection<Position> _positions = new ObservableRangeCollection<Position>();
+        private readonly ObservableRangeCollection<Position[]> _holes = new ObservableRangeCollection<Position[]>();
 
         /// <summary>
         /// Initializes a new instance of the <see cref="T:Mapsui.UI.Forms.Polygon"/> class.
@@ -68,7 +68,7 @@ namespace Mapsui.UI.Forms
                     ((Mapsui.Geometries.Polygon)Feature.Geometry).InteriorRings = Holes.Select(h => new LinearRing(h.Select(p => p.ToMapsui()).ToList())).ToList();
                     break;
                 case nameof(FillColor):
-                    ((VectorStyle)Feature.Styles.First()).Fill = new Brush(FillColor.ToMapsui());
+                    ((VectorStyle)Feature.Styles.First()).Fill = new Styles.Brush(FillColor.ToMapsui());
                     break;
                 case nameof(StrokeColor):
                     ((VectorStyle)Feature.Styles.First()).Outline.Color = StrokeColor.ToMapsui();
@@ -107,7 +107,7 @@ namespace Mapsui.UI.Forms
                     Feature.Styles.Add(new VectorStyle
                     {
                         Line = new Pen { Width = StrokeWidth, Color = StrokeColor.ToMapsui() },
-                        Fill = new Brush { Color = FillColor.ToMapsui() }
+                        Fill = new Styles.Brush { Color = FillColor.ToMapsui() }
                     });
                 }
             }

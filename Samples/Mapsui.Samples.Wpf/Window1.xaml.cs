@@ -19,6 +19,9 @@ namespace Mapsui.Samples.Wpf
         public Window1()
         {
             InitializeComponent();
+
+            Encoding.RegisterProvider(CodePagesEncodingProvider.Instance);
+
             MapControl.FeatureInfo += MapControlFeatureInfo;
             MapControl.MouseMove += MapControlOnMouseMove;
             MapControl.Map.RotationLock = false;
@@ -40,7 +43,11 @@ namespace Mapsui.Samples.Wpf
             var selectedValue = ((ComboBoxItem)((ComboBox)sender).SelectedItem).Content.ToString();
 
             if (selectedValue.ToLower().Contains("wpf"))
+            {
                 MapControl.RenderMode = UI.Wpf.RenderMode.Wpf;
+                if (!((Rendering.Xaml.MapRenderer)MapControl.Renderer).StyleRenderers.ContainsKey(typeof(Common.Maps.CustomStyle)))
+                    ((Rendering.Xaml.MapRenderer)MapControl.Renderer).StyleRenderers.Add(typeof(Common.Maps.CustomStyle), new XamlCustomStyleRenderer());
+            }
             else if (selectedValue.ToLower().Contains("skia"))
                 MapControl.RenderMode = UI.Wpf.RenderMode.Skia;
             else
@@ -143,8 +150,16 @@ namespace Mapsui.Samples.Wpf
 
         private void MapControlOnInfo(object sender, MapInfoEventArgs args)
         {
-            if (args?.MapInfo?.Feature != null)
+            if (args.MapInfo?.Feature != null)
+            {
+                FeatureInfoBorder.Visibility = Visibility.Visible;
                 FeatureInfo.Text = $"Click Info:{Environment.NewLine}{args.MapInfo.Feature.ToDisplayText()}";
+            }
+            else
+            {
+                FeatureInfoBorder.Visibility = Visibility.Collapsed;
+            }
+
         }
     }
 }

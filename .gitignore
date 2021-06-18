@@ -53,3 +53,6 @@ project.lock.json
 /Samples/Mapsui.Samples.Uwp/AppPackages/Mapsui.Samples.Uwp_1.0.0.0_x86_Test
 /Artifacts
 *.appx
+
+Samples/Mapsui.Samples.Droid/Resources/Resource.Designer.cs
+Samples/Mapsui.Samples.Forms/Mapsui.Samples.Forms.Android/Resources/Resource.designer.cs

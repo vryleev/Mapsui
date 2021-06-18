@@ -16,19 +16,19 @@
   </PropertyGroup>
 
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Release|AnyCPU' ">
-    <DebugType></DebugType>
+    <DebugType>portable</DebugType>
     <DefineConstants>TRACE;RELEASE;NETSTANDARD1_3;__FORMS__</DefineConstants>
   </PropertyGroup>
-  <ItemGroup><!--<PackageReference Include="" Version=""/>-->
-  
-    <Folder Include="Properties\" />
-  </ItemGroup>
 
   <ItemGroup>
     <PackageReference Include="SkiaSharp" Version="1.68.1.1" />
     <PackageReference Include="SkiaSharp.Svg" Version="1.60.0" />
     <PackageReference Include="SkiaSharp.Views" Version="1.68.1.1" />
     <PackageReference Include="Xamarin.Forms" Version="4.3.0.991211" />
+    <PackageReference Include="SkiaSharp" Version="2.80.2" />
+    <PackageReference Include="SkiaSharp.Views.Forms" Version="2.80.2" />
+    <PackageReference Include="Topten.RichTextKit" Version="0.3.134" />
+    <PackageReference Include="Xamarin.Forms" Version="5.0.0.1905" />
   </ItemGroup>
 
   <ItemGroup>

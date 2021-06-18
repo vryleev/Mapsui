@@ -10,6 +10,7 @@ using Mapsui.Samples.Common;
 using Mapsui.Samples.Common.ExtensionMethods;
 using Mapsui.Samples.Common.Helpers;
 using Mapsui.Samples.Common.Maps;
+using Mapsui.Samples.CustomWidget;
 using Mapsui.UI;
 using Mapsui.UI.Android;
 
@@ -41,6 +42,7 @@ namespace Mapsui.Samples.Droid
             _mapControl.Map.RotationLock = true;
             _mapControl.UnSnapRotationDegrees = 30;
             _mapControl.ReSnapRotationDegrees = 5;
+            _mapControl.Renderer.WidgetRenders[typeof(CustomWidget.CustomWidget)] = new CustomWidgetSkiaRenderer();
 
             FindViewById<RelativeLayout>(Resource.Id.mainLayout).AddView(_popup = CreatePopup());
 
@@ -55,6 +57,10 @@ namespace Mapsui.Samples.Droid
         public override bool OnCreateOptionsMenu(IMenu menu)
         {
             MenuInflater.Inflate(Resource.Menu.menu_main, menu);
+
+            var rendererMenu = menu.AddSubMenu(nameof(SkiaRenderMode));
+            rendererMenu.Add(SkiaRenderMode.Software.ToString());
+            rendererMenu.Add(SkiaRenderMode.Hardware.ToString());
 
             var categories = AllSamples.GetSamples().Select(s => s.Category).Distinct().OrderBy(c => c);
             foreach (var category in categories)
@@ -83,12 +89,23 @@ namespace Mapsui.Samples.Droid
                 return true;
             }
 
-            var sample = AllSamples.GetSamples().FirstOrDefault(s => s.Name == item.TitleFormatted.ToString());
-            if (sample != null)
+            if (item.TitleFormatted.ToString() == SkiaRenderMode.Software.ToString())
             {
-                _mapControl.Map.Layers.Clear();
-                sample.Setup(_mapControl);
-                return true;
+                _mapControl.RenderMode = SkiaRenderMode.Software;
+            }
+            else if (item.TitleFormatted.ToString() == SkiaRenderMode.Hardware.ToString())
+            {
+                _mapControl.RenderMode = SkiaRenderMode.Hardware;
+            }
+            else
+            {
+                var sample = AllSamples.GetSamples().FirstOrDefault(s => s.Name == item.TitleFormatted.ToString());
+                if (sample != null)
+                {
+                    _mapControl.Map.Layers.Clear();
+                    sample.Setup(_mapControl);
+                    return true;
+                }
             }
             
             return base.OnOptionsItemSelected(item);

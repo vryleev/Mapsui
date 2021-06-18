@@ -16,7 +16,6 @@
 // Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA f
 
 using System;
-using System.Linq;
 using System.Threading.Tasks;
 using Windows.Devices.Sensors;
 using Windows.Foundation;
@@ -32,6 +31,7 @@ using Windows.UI.Xaml.Shapes;
 using SkiaSharp.Views.UWP;
 using HorizontalAlignment = Windows.UI.Xaml.HorizontalAlignment;
 using VerticalAlignment = Windows.UI.Xaml.VerticalAlignment;
+using Mapsui.Utilities;
 
 namespace Mapsui.UI.Uwp
 {
@@ -41,6 +41,8 @@ namespace Mapsui.UI.Uwp
         private readonly SKXamlCanvas _canvas = CreateRenderTarget();
         private double _innerRotation;
 
+        public MouseWheelAnimation MouseWheelAnimation { get; } = new MouseWheelAnimation { Duration = 0 };
+
         public MapControl()
         {
             Background = new SolidColorBrush(Colors.White); // DON'T REMOVE! Touch events do not work without a background
@@ -48,7 +50,6 @@ namespace Mapsui.UI.Uwp
             Children.Add(_canvas);
             Children.Add(_selectRectangle);
 
-            _canvas.IgnorePixelScaling = true;
             _canvas.PaintSurface += Canvas_PaintSurface;
 
             Map = new Map();
@@ -70,23 +71,32 @@ namespace Mapsui.UI.Uwp
 
             var orientationSensor = SimpleOrientationSensor.GetDefault();
             if (orientationSensor != null)
-                orientationSensor.OrientationChanged += (sender, args) => RunOnUIThread(Refresh);
+                orientationSensor.OrientationChanged += (sender, args) => RunOnUIThread(() => Refresh());
         }
 
 
         private void OnManipulationStarted(object sender, ManipulationStartedRoutedEventArgs e)
         {
+            // We have a new interaction with the screen, so stop all navigator animations
+            Navigator.StopRunningAnimation();
+
             _innerRotation = _viewport.Rotation;
         }
 
         private void OnDoubleTapped(object sender, DoubleTappedRoutedEventArgs e)
         {
-            var tabPosition = e.GetPosition(this).ToMapsui();
-            OnInfo(InvokeInfo(tabPosition, tabPosition, 2));
+            // We have a new interaction with the screen, so stop all navigator animations
+            Navigator.StopRunningAnimation();
+
+            var tapPosition = e.GetPosition(this).ToMapsui();
+            OnInfo(InvokeInfo(tapPosition, tapPosition, 2));
         }
 
         private void OnSingleTapped(object sender, TappedRoutedEventArgs e)
         {
+            // We have a new interaction with the screen, so stop all navigator animations
+            Navigator.StopRunningAnimation();
+
             var tabPosition = e.GetPosition(this).ToMapsui();
             OnInfo(InvokeInfo(tabPosition, tabPosition, 1));
         }
@@ -130,23 +140,21 @@ namespace Mapsui.UI.Uwp
 
             var currentPoint = e.GetCurrentPoint(this);
 
-            //Needed for both MouseMove and MouseWheel event for mousewheel event
-
             var mousePosition = new Geometries.Point(currentPoint.RawPosition.X, currentPoint.RawPosition.Y);
 
-            if (currentPoint.Properties.MouseWheelDelta > 0)
-                Navigator.ZoomIn(mousePosition);
-            else if (currentPoint.Properties.MouseWheelDelta < 0)
-                Navigator.ZoomOut(mousePosition);
-            
-            e.Handled = true;
+            var resolution = MouseWheelAnimation.GetResolution(currentPoint.Properties.MouseWheelDelta, _viewport, _map);
+            // Limit target resolution before animation to avoid an animation that is stuck on the max resolution, which would cause a needless delay
+            resolution = Map.Limiter.LimitResolution(resolution, Viewport.Width, Viewport.Height, Map.Resolutions, Map.Envelope);
+            Navigator.ZoomTo(resolution, mousePosition, MouseWheelAnimation.Duration, MouseWheelAnimation.Easing);
 
-            RefreshGraphics();
-            RefreshData();
+            e.Handled = true;
         }
         
         public void RefreshGraphics()
         {
+            // The commented out code crashes the app when MouseWheelAnimation.Duration > 0. Could be a bug in SKXamlCanvas
+            //if (Dispatcher.HasThreadAccess) _canvas?.Invalidate();
+            //else RunOnUIThread(() => _canvas?.Invalidate());
             RunOnUIThread(() => _canvas?.Invalidate());
         }
 
@@ -171,8 +179,12 @@ namespace Mapsui.UI.Uwp
             if (Renderer == null) return;
             if (_map == null) return;
             if (!Viewport.HasSize) return;
+            if (PixelDensity <= 0) return;
 
-            Renderer.Render(e.Surface.Canvas, Viewport, _map.Layers, _map.Widgets, _map.BackColor);
+            e.Surface.Canvas.Scale(PixelDensity, PixelDensity);
+
+            Navigator.UpdateAnimations();
+            Renderer.Render(e.Surface.Canvas, new Viewport(Viewport), _map.Layers, _map.Widgets, _map.BackColor);
         }
 
         [Obsolete("Use MapControl.Navigate.NavigateTo instead", true)]
@@ -185,6 +197,8 @@ namespace Mapsui.UI.Uwp
         
         private void OnManipulationDelta(object sender, ManipulationDeltaRoutedEventArgs e)
         {
+            // We have a new interaction with the screen, so stop all navigator animations
+            Navigator.StopRunningAnimation();
 
             var center = e.Position.ToMapsui();
             var radius = e.Delta.Scale;
@@ -222,8 +236,6 @@ namespace Mapsui.UI.Uwp
             e.Handled = true;
         }
 
-        public float PixelDensity => (float)DisplayInformation.GetForCurrentView().RawPixelsPerViewPixel;
-
         public void OpenBrowser(string url)
         {
             Task.Run(() => Launcher.LaunchUriAsync(new Uri(url)));
@@ -231,5 +243,11 @@ namespace Mapsui.UI.Uwp
 
         private float ViewportWidth => (float)ActualWidth;
         private float ViewportHeight => (float)ActualHeight;
+
+        private float GetPixelDensity()
+        {
+            return (float)DisplayInformation.GetForCurrentView().RawPixelsPerViewPixel;
+        }
+
     }
 }

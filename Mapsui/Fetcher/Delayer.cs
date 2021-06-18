@@ -3,44 +3,83 @@ using System.Threading;
 
 namespace Mapsui.Fetcher
 {
-    class Delayer
+    /// <summary>
+    /// Makes sure a method is always called 'MillisecondsToDelay' after the previous call.
+    /// </summary>
+    public class Delayer
     {
-        private readonly Timer _timer;
-        private Action _method;
-        private bool _first = true;
+        private readonly Timer _waitTimer;
+        private Action _action;
+        private bool _waiting;
+
+        /// <summary>
+        /// The delay between two calls.
+        /// </summary>
+        public int MillisecondsToWait { get; set; } = 500;
+
+        public bool StartWithDelay { get; set; } = false;
 
         public Delayer()
         {
-            _timer = new Timer(FetchDelayTimerElapsed, null, Timeout.Infinite, Timeout.Infinite);
+            _waitTimer = new Timer(WaitTimerElapsed, null, Timeout.Infinite, Timeout.Infinite);
         }
 
         /// <summary>
-        /// Executes the method passed as argument with a delay specified
-        /// by the dueTime parameter. When the method is called before a
-        /// previous delayed method was executed the previous one will be
-        /// cancelled.
+        /// Executes the method passed as argument with a possible delay. After a previous
+        /// call the next call is delayed until 'MillisecondsToWait' has passed.
+        /// When ExecuteRequest is called before the previous delayed action was executed 
+        /// the previous one will be cancelled.
         /// </summary>
-        /// <param name="method">The method to be executed after the delay</param>
-        /// <param name="dueTime">The delay before the method is executed in milliseconds</param>
-        /// <remarks>On the first call to ExecuteDelayed the dueTime parameter will be ignored and
-        /// the delay will be zero.</remarks>
-        public void ExecuteDelayed(Action method, int dueTime)
+        /// <param name="action">The action to be executed after the possible delay</param>
+        /// <remarks>When the previous call was more than 'MillisecondsToWait' ago there will
+        /// be no delay.</remarks>
+        public void ExecuteDelayed(Action action)
         {
-            _method = method;
-            
-            if (_first) // On initial load we want a fast response
+            if (_waiting)
             {
-                dueTime = 0;
-                _first = false;
+                // If waiting, just assign the action and wait for it to be called.
+                _action = action;
             }
-
-            _timer.Change(dueTime, Timeout.Infinite);
+            else
+            {
+                // If not waiting call the action immediately.
+                if (!StartWithDelay)
+                    action();
+                else
+                    _action = action;
+                // Then wait for another interval to check if more actions come in.
+                StartWaiting();
+            }
         }
-        
-        private void FetchDelayTimerElapsed(object state)
+
+        private void WaitTimerElapsed(object state)
         {
-            _timer.Change(Timeout.Infinite, Timeout.Infinite);
-            _method?.Invoke();
+            if (_action != null)
+            {
+                // Waiting is done, we can call the action.
+                _action?.Invoke();
+                // Set the action to null. This indicates there is no new request.
+                _action = null;
+                // Now we keep the timer running. It will stop if _action is still null.
+            }
+            else
+            {
+                // The _action is null, so during the previous interval no new request came in.
+                // Next time a new request comes in we don't have to wait.
+                StopWaiting();
+            }
+        }
+
+        private void StartWaiting()
+        {
+            _waiting = true;
+            _waitTimer.Change(MillisecondsToWait, MillisecondsToWait);
+        }
+
+        private void StopWaiting()
+        {
+            _waiting = false;
+            _waitTimer.Change(Timeout.Infinite, Timeout.Infinite);
         }
     }
 }

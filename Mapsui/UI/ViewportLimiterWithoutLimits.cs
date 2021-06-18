@@ -7,6 +7,7 @@ namespace Mapsui.UI
     {
         public BoundingBox PanLimits { get; set; }
         public MinMax ZoomLimits { get; set; }
+
         public void Limit(IViewport viewport, IReadOnlyList<double> mapResolutions, BoundingBox mapEnvelope)
         {
         }

@@ -2,7 +2,6 @@
 using System;
 using System.Collections.Generic;
 using System.ComponentModel;
-using System.Linq;
 using System.Net;
 using Mapsui.Fetcher;
 using Mapsui.Layers;
@@ -11,6 +10,7 @@ using Mapsui.Rendering;
 using Mapsui.Rendering.Skia;
 using Mapsui.Widgets;
 using System.Runtime.CompilerServices;
+using Mapsui.Utilities;
 
 #if __ANDROID__
 namespace Mapsui.UI.Android
@@ -63,6 +63,11 @@ namespace Mapsui.UI.Wpf
             }
         }
 
+        public float PixelDensity
+        {
+            get => GetPixelDensity();
+        }
+
         private IRenderer _renderer = new MapRenderer();
 
         /// <summary>
@@ -106,10 +111,10 @@ namespace Mapsui.UI.Wpf
             }
         }
 
-        private void Navigated(object sender, EventArgs e)
+        private void Navigated(object sender, ChangeType changeType)
         {
             _map.Initialized = true;
-            Refresh();
+            Refresh(changeType);
         }
 
         /// <summary>
@@ -177,9 +182,9 @@ namespace Mapsui.UI.Wpf
         /// <summary>
         /// Refresh data of the map and than repaint it
         /// </summary>
-        public void Refresh()
+        public void Refresh(ChangeType changeType = ChangeType.Discrete)
         {
-            RefreshData();
+            RefreshData(changeType);
             RefreshGraphics();
         }
 
@@ -314,9 +319,9 @@ namespace Mapsui.UI.Wpf
         /// <summary>
         /// Refresh data of Map, but don't paint it
         /// </summary>
-        public void RefreshData()
+        public void RefreshData(ChangeType changeType = ChangeType.Discrete)
         {
-            _map?.RefreshData(Viewport.Extent, Viewport.Resolution, true);
+            _map?.RefreshData(Viewport.Extent, Viewport.Resolution, changeType);
         }
 
         private void OnInfo(MapInfoEventArgs mapInfoEventArgs)
@@ -343,8 +348,7 @@ namespace Mapsui.UI.Wpf
         /// <inheritdoc />
         public MapInfo GetMapInfo(Point screenPosition, int margin = 0)
         {
-            return MapInfoHelper.GetMapInfo(Map.Layers.Where(l => l.IsMapInfoLayer).ToList(), Viewport,
-                screenPosition, Renderer.SymbolCache, margin);
+            return Renderer.GetMapInfo(screenPosition.X, screenPosition.Y, Viewport, Map.Layers, margin);
         }
 
         /// <inheritdoc />
@@ -352,7 +356,7 @@ namespace Mapsui.UI.Wpf
         {
             byte[] result = null;
             
-            using (var stream = Renderer.RenderToBitmapStream(Viewport, layers ?? Map.Layers)) 
+            using (var stream = Renderer.RenderToBitmapStream(Viewport, layers ?? Map.Layers, pixelDensity: PixelDensity)) 
             { 
                 if (stream != null)
                     result = stream.ToArray(); 
@@ -371,12 +375,9 @@ namespace Mapsui.UI.Wpf
         private MapInfoEventArgs InvokeInfo(Point screenPosition, Point startScreenPosition, int numTaps)
         {
             return InvokeInfo(
-                Map.Layers.Where(l => l.IsMapInfoLayer).ToList(), 
                 Map.GetWidgetsOfMapAndLayers(), 
-                Viewport,
                 screenPosition, 
                 startScreenPosition, 
-                _renderer.SymbolCache, 
                 WidgetTouched, 
                 numTaps);
         }
@@ -384,24 +385,17 @@ namespace Mapsui.UI.Wpf
         /// <summary>
         /// Check if a widget or feature at a given screen position is clicked/tapped
         /// </summary>
-        /// <param name="layers">The layers to query for MapInfo</param>
         /// <param name="widgets">The Map widgets</param>
-        /// <param name="viewport">The current Viewport</param>
         /// <param name="screenPosition">Screen position to check for widgets and features</param>
         /// <param name="startScreenPosition">Screen position of Viewport/MapControl</param>
-        /// <param name="symbolCache">Cache for symbols to determine size</param>
         /// <param name="widgetCallback">Callback, which is called when Widget is hit</param>
         /// <param name="numTaps">Number of clickes/taps</param>
         /// <returns>True, if something done </returns>
-        private static MapInfoEventArgs InvokeInfo(IEnumerable<ILayer> layers, IEnumerable<IWidget> widgets, 
-            IReadOnlyViewport viewport, Point screenPosition, Point startScreenPosition, ISymbolCache symbolCache,
-            Func<IWidget, Point, bool> widgetCallback, int numTaps)
+        private MapInfoEventArgs InvokeInfo(IEnumerable<IWidget> widgets, Point screenPosition, 
+            Point startScreenPosition, Func<IWidget, Point, bool> widgetCallback, int numTaps)
         {
-            var layerWidgets = layers.Select(l => l.Attribution).Where(a => a != null);
-            var allWidgets = layerWidgets.Concat(widgets).ToList(); // Concat layer widgets and map widgets.
-
-            // First check if a Widget is clicked. In the current design they are always on top of the map.
-            var touchedWidgets = WidgetTouch.GetTouchedWidget(screenPosition, startScreenPosition, allWidgets);
+            // Check if a Widget is tapped. In the current design they are always on top of the map.
+            var touchedWidgets = WidgetTouch.GetTouchedWidget(screenPosition, startScreenPosition, widgets);
 
             foreach (var widget in touchedWidgets)
             {
@@ -416,7 +410,8 @@ namespace Mapsui.UI.Wpf
                 }
             }
         
-            var mapInfo = MapInfoHelper.GetMapInfo(layers, viewport, screenPosition, symbolCache);
+            // Check which features in the map were tapped.
+            var mapInfo = Renderer.GetMapInfo(screenPosition.X, screenPosition.Y, Viewport, Map.Layers);
 
             if (mapInfo != null)
             {

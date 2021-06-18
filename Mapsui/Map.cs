@@ -213,11 +213,11 @@ namespace Mapsui
             }
         }
 
-        public void RefreshData(BoundingBox extent, double resolution, bool majorChange)
+        public void RefreshData(BoundingBox extent, double resolution, ChangeType changeType)
         {
             foreach (var layer in _layers.ToList())
             {
-                layer.RefreshData(extent, resolution, majorChange);
+                layer.RefreshData(extent, resolution, changeType);
             }
         }
 
@@ -310,7 +310,8 @@ namespace Mapsui
 
         public IEnumerable<IWidget> GetWidgetsOfMapAndLayers()
         {
-            return Widgets.Concat(Layers.Select(l => l.Attribution)).Where(w => w != null).ToList();
+            return Widgets.Concat(Layers.Where(l => l.Enabled).Select(l => l.Attribution))
+                .Where(a => a != null && a.Enabled).ToList();
         }
     }
 }

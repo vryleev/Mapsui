@@ -79,7 +79,7 @@ namespace Mapsui.Desktop.Wms
             else //None of the default formats supported - Look for the first supported output format
             {
                 throw new ArgumentException(
-                    "None of the formates provided by the WMS service are supported");
+                    "None of the formats provided by the WMS service are supported");
             }
             LayerList = new Collection<string>();
             StylesList = new Collection<string>();
@@ -317,7 +317,7 @@ namespace Mapsui.Desktop.Wms
             }
             catch (OverflowException)
             {
-                Trace.Write("Could not conver double to int (ExportMap size)");
+                Trace.Write("Could not convert double to int (ExportMap size)");
                 return false;
             }
 
@@ -408,12 +408,11 @@ namespace Mapsui.Desktop.Wms
             {
                 foreach (string layer in LayerList)
                 {
-                    Client.WmsServerLayer result;
-                    if (FindLayer(_wmsClient.Layer, layer, out result))
+                    if (FindLayer(_wmsClient.Layer, layer, out var result))
                     {
                         foreach (var style in result.Style)
                         {
-                            legendUrls.Add(System.Web.HttpUtility.HtmlDecode(style.LegendUrl.OnlineResource.OnlineResource));
+                            legendUrls.Add(WebUtility.HtmlDecode(style.LegendUrl.OnlineResource.OnlineResource));
                             break; // just add first style. TODO: think about how to select a style
                         }
                     }
@@ -506,9 +505,9 @@ namespace Mapsui.Desktop.Wms
                 throw new Exception($"Unexpected WMS response code: {response.StatusCode}");
             }
 
-            if (response.Content.Headers.ContentType.ToString().ToLower() != _mimeType)
+            if (response.Content.Headers.ContentType.MediaType.ToLower() != _mimeType)
             { 
-                throw new Exception($"Unexpected WMS response content type. Expected - {_mimeType}, getted - {response.Content.Headers.ContentType}");
+                throw new Exception($"Unexpected WMS response content type. Expected - {_mimeType}, getted - {response.Content.Headers.ContentType.MediaType}");
             }
        
             return await response.Content.ReadAsStreamAsync();

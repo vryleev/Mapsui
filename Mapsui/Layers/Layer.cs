@@ -25,7 +25,7 @@ using Mapsui.Providers;
 using Mapsui.Utilities;
 
 // todo: Use Transformer only to translate between provider and cache. Layer only interacts with cache.
-// todo: Put the datasource envelop in the cache (it should not just be the envelope of the cached data, but all data in datasource). 
+// todo: Put the dataSource envelop in the cache (it should not just be the envelope of the cached data, but all data in dataSource). 
 
 namespace Mapsui.Layers
 {
@@ -36,12 +36,12 @@ namespace Mapsui.Layers
         private readonly MemoryProvider _cache = new MemoryProvider();
         private readonly FeatureFetchDispatcher _fetchDispatcher;
         private readonly FetchMachine _fetchMachine;
-        private readonly Delayer _delayer = new Delayer();
+        public Delayer Delayer { get; } = new Delayer();
 
         /// <summary>
         /// Create a new layer
         /// </summary>
-        public Layer() : this("Layer") {}
+        public Layer() : this("Layer") { }
 
         /// <summary>
         /// Create layer with name
@@ -59,8 +59,17 @@ namespace Mapsui.Layers
         /// <summary>
         /// Time to wait before fetching data
         /// </summary>
-        public int FetchingPostponedInMilliseconds { get; set; } = 500;
-
+        public int FetchingPostponedInMilliseconds
+        {
+            get
+            {
+                return Delayer.MillisecondsToWait;
+            }
+            set
+            {
+                Delayer.MillisecondsToWait = value;
+            }
+        }
         /// <summary>
         /// Data source for this layer
         /// </summary>
@@ -73,7 +82,7 @@ namespace Mapsui.Layers
 
                 _dataSource = value;
                 ClearCache();
-                
+
                 if (_dataSource != null)
                 {
                     Transformer.FromCRS = _dataSource?.CRS;
@@ -104,7 +113,7 @@ namespace Mapsui.Layers
             _fetchDispatcher.SetAnywareUpdate(anywayUpdate);
             _fetchMachine.Start();
         }
-        
+
         /// <summary>
         /// Returns the extent of the layer
         /// </summary>
@@ -139,13 +148,15 @@ namespace Mapsui.Layers
         }
 
         /// <inheritdoc />
-        public override void RefreshData(BoundingBox extent, double resolution, bool majorChange, bool anywayUpdate = false)
+        public override void RefreshData(BoundingBox extent, double resolution, ChangeType changeType, bool anywayUpdate = false)
         {
             if (!Enabled) return;
+            //if (MinVisible > resolution) return;
+            //if (MaxVisible < resolution) return;
             if (DataSource == null) return;
-            if (!majorChange) return;
+            if (changeType == ChangeType.Continuous) return;
 
-            _delayer.ExecuteDelayed(() => DelayedFetch(extent.Copy(), resolution, anywayUpdate), FetchingPostponedInMilliseconds);
+            Delayer.ExecuteDelayed(() => DelayedFetch(extent.Copy(), resolution, anywayUpdate));
         }
 
         /// <inheritdoc />

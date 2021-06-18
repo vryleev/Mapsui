@@ -80,13 +80,24 @@ namespace Mapsui.Layers
         public int Id { get; }
 
         /// <inheritdoc />
-        public object Tag
-        {
+        public object Tag 
+        { 
             get => _tag;
             set
+            { 
+                _tag = value; 
+                OnPropertyChanged(nameof(Tag)); 
+            }
+        }
+
+        public bool IsActive
+        {
+            get => _isActive;
+            set
             {
-                _tag = value;
-                OnPropertyChanged(nameof(Tag));
+                if (_isActive == value) return;
+                _isActive = value;
+                OnPropertyChanged(nameof(IsActive));
             }
         }
 
@@ -204,7 +215,7 @@ namespace Mapsui.Layers
             }
         }
 
-
+       
         /// <summary>
         /// Returns the envelope of all avaiable data in the layer
         /// </summary>
@@ -232,7 +243,7 @@ namespace Mapsui.Layers
 
         /// <inheritdoc />
 
-        public abstract void RefreshData(BoundingBox extent, double resolution, bool majorChange, bool anywayUpdate = false);
+        public abstract void RefreshData(BoundingBox extent, double resolution, ChangeType changeType, bool anywayUpdate = false);
 
         public void DataHasChanged()
         {
@@ -258,17 +269,6 @@ namespace Mapsui.Layers
         protected void OnDataChanged(DataChangedEventArgs args)
         {
             DataChanged?.Invoke(this, args);
-        }
-
-        public bool IsActive
-        {
-            get => _isActive;
-            set
-            {
-                if (_isActive == value) return;
-                _isActive = value;
-                OnPropertyChanged(nameof(IsActive));
-            }
         }
     }
 }
